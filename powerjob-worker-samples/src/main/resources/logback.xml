@@ -16,6 +16,25 @@
             <charset>UTF-8</charset>
         </encoder>
     </appender>
+    <!--
+    为 powerjob-worker 单独进行日志配置[https://www.yuque.com/powerjob/guidence/deploy_worker#M5W4L]
+    -->
+    <appender name="POWERJOB_WORKER_APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/powerjob-worker.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${LOG_PATH}/powerjob-worker.%d{yyyy-MM-dd}.log</FileNamePattern>
+            <MaxHistory>7</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <append>true</append>
+    </appender>
+
+    <logger name="tech.powerjob.worker" level="INFO" additivity="false">
+        <appender-ref ref="POWERJOB_WORKER_APPENDER" />
+    </logger>
 
     <springProfile name="default">
         <!-- 默认环境时激活，全部输出到控制台 -->
