@@ -1,6 +1,6 @@
 # 为了便于使用 arthas，agent 也使用 jdk 而不是 jre
 FROM adoptopenjdk:8-jdk-hotspot
-MAINTAINER tengjiqi@gmail.com
+MAINTAINER zombie(zombiesoul@163.com)
 
 ENV APP_NAME=powerjob-worker-agent
 # 传递 SpringBoot 启动参数 和 JVM参数
@@ -16,11 +16,14 @@ RUN apt-get update && \
 # 安装 wait-for-it 脚本
 RUN curl -o wait-for-it.sh https://gitee.com/KFCFans/wait-for-it/raw/master/wait-for-it.sh
 RUN chmod +x wait-for-it.sh
-# 拷贝主文件
+# todo docker构建镜像依赖maven完成打包
+# mvn clean package -Pdev -DskipTests
+#/bin/cp -rf powerjob-worker-agent/target/*.jar powerjob-worker-agent/powerjob-agent.jar
+# 将应用 jar 包拷入指定目录下
 COPY powerjob-agent.jar /powerjob-agent.jar
 # 暴露端口（AKKA-Client）
 EXPOSE 27777
-# 挂载数据卷，将文件直接输出到宿主机（注意，此处挂载的是匿名卷，即在宿主机位置随机）
+# 挂载数据卷，将文件直接输出到宿主机（注意，此处挂载的是匿名卷，即在宿主机位置随机生成）
 VOLUME /root
 # 启动应用
 ENTRYPOINT ["sh","-c","java $JVMOPTIONS -jar /powerjob-agent.jar $PARAMS"]

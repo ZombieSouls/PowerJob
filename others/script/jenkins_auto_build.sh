@@ -25,7 +25,8 @@ docker run -d \
        --name powerjob-server \
        -p 7700:7700 -p 10086:10086 -p 5001:5005 -p 10001:10000 \
        -e JVMOPTIONS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=10000 -Dcom.sun.management.jmxremote.rmi.port=10000 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false" \
-       -e PARAMS="--oms.swagger.enable=true --spring.profiles.active=product --spring.datasource.core.jdbc-url=jdbc:mysql://remotehost:3306/powerjob-product?useUnicode=true&characterEncoding=UTF-8 --oms.mongodb.enable=false --spring.data.mongodb.uri=mongodb://remotehost:27017/powerjob-product" \
+       -e PARAMS="--oms.swagger.enable=true --spring.profiles.active=product --spring.datasource.core.jdbc-url=jdbc:postgresql://localhost:5432/power_job?currentSchema=power_job --oms.mongodb.enable=false --spring.data.mongodb.uri=mongodb://remotehost:27017/powerjob-product" \
+#       -e PARAMS="--oms.swagger.enable=true --spring.profiles.active=product --spring.datasource.core.jdbc-url=jdbc:mysql://remotehost:3306/powerjob-product?useUnicode=true&characterEncoding=UTF-8 --oms.mongodb.enable=false --spring.data.mongodb.uri=mongodb://remotehost:27017/powerjob-product" \
        -v ~/docker/powerjob-server:/root/powerjob/server -v ~/.m2:/root/.m2 \
        tjqq/powerjob-server:latest
 sleep 60

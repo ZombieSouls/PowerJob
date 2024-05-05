@@ -25,7 +25,9 @@ services:
       - powerjob-mysql
     environment:
       JVMOPTIONS: "-Xmx512m"
-      PARAMS: "--oms.mongodb.enable=false --spring.datasource.core.jdbc-url=jdbc:mysql://powerjob-mysql:3306/powerjob-daily?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai"
+      PARAMS: "--oms.mongodb.enable=false --spring.datasource.core.jdbc-url=jdbc:postgresql://localhost:5432/power_job_daily?currentSchema=power_job"
+#      for mysql
+#      PARAMS: "--oms.mongodb.enable=false --spring.datasource.core.jdbc-url=jdbc:mysql://powerjob-mysql:3306/powerjob-daily?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai"
     ports:
       - "7700:7700"
       - "10086:10086"

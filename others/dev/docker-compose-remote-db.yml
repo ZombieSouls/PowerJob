@@ -1,44 +1,8 @@
 # 构建 PowerJob 测试环境
 # todo docker构建镜像依赖maven完成打包
-# 该文件是官方默认构建文件，依赖的镜像不是基于本地dockerfile构建，均来自dockerhub：https://registry.hub.docker.com/u/powerjob
 
 version: '3.7'
 services:
-  powerjob-mysql:
-    build:
-      context: ../
-    environment:
-      MYSQL_ROOT_HOST: "%"
-      MYSQL_ROOT_PASSWORD: No1Bug2Please3!
-    deploy:
-      resources:
-        limits:
-          memory: 768M
-    restart: always
-    container_name: powerjob-mysql
-    image: powerjob/powerjob-mysql:test_env
-    ports:
-      - "3309:3306"
-    volumes:
-      - ~/powerjob-data/powerjob-mysql:/var/lib/mysql
-    command: --lower_case_table_names=1
-#  powerjob-mongodb:
-#    image: mongo:latest
-#    container_name: powerjob-mongodb
-#    restart: always
-#    deploy:
-#      resources:
-#        limits:
-#          memory: 256M
-#    environment:
-#      MONGO_INITDB_ROOT_USERNAME: "root"
-#      MONGO_INITDB_ROOT_PASSWORD: "No1Bug2Please3!"
-#      MONGO_INITDB_DATABASE: "powerjob_daily"
-#    ports:
-#      - "27017:27017"
-#    volumes:
-#      - ./testenv/init_mongodb.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
-#      - ~/powerjob-data/powerjob-mongodb:/data/db
   powerjob-server:
     build:
       context: ../../powerjob-server/docker
@@ -47,13 +11,13 @@ services:
         limits:
           memory: 896M
     container_name: powerjob-server
-    image: powerjob/powerjob-server:test_env
+    image: powerjob-server-postgres:daily_env
+#    image: powerjob/powerjob-server:test_env
     restart: always
-    depends_on:
-      - powerjob-mysql
-#      - powerjob-mongodb
     environment:
-      PARAMS: "--spring.profiles.active=daily --spring.datasource.core.jdbc-url=jdbc:mysql://powerjob-mysql:3306/powerjob-daily?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai --oms.storage.dfs.mysql_series.url=jdbc:mysql://powerjob-mysql:3306/powerjob-daily?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai"
+      PARAMS: "--spring.profiles.active=daily --db_url=jdbc:log4jdbc:postgresql://host.docker.internal:5432/power_job_daily?currentSchema=power_job"
+      #      PARAMS: "--spring.profiles.active=daily --spring.datasource.core.jdbc-url=jdbc:postgresql://host.docker.internal:5432/power_job_daily?currentSchema=power_job"
+      #      PARAMS: "--spring.profiles.active=daily --spring.datasource.core.jdbc-url=jdbc:mysql://powerjob-mysql:3306/powerjob-daily?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai --oms.storage.dfs.mysql_series.url=jdbc:mysql://powerjob-mysql:3306/powerjob-daily?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai"
       JVMOPTIONS: "-server -XX:+UseG1GC -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=7 -XX:GCLogFileSize=100M -Xloggc:/root/powerjob/server/gc.log"
     ports:
       - "7700:7700"
@@ -62,6 +26,9 @@ services:
     volumes:
       - ~/powerjob-data/powerjob-server:/root/powerjob/server/
       - ~/.m2:/root/.m2
+    #   see: https://docs.docker.com/desktop/networking/#i-want-to-connect-from-a-container-to-a-service-on-the-host
+    extra_hosts:
+      - host.docker.internal:host-gateway
 
   powerjob-worker-agent:
     build:
@@ -71,10 +38,11 @@ services:
         limits:
           memory: 384M
     container_name: powerjob-worker-agent
-    image: powerjob/powerjob-worker-agent:test_env
+    image: powerjob-worker-agent-postgres:daily_env
+#    image: powerjob/powerjob-worker-agent:test_env
     restart: always
     depends_on:
-      - powerjob-mysql
+      #      - powerjob-db
       - powerjob-server
     ports:
       - "5002:5005"
@@ -86,6 +54,9 @@ services:
       - "sh"
       - "-c"
       - "./wait-for-it.sh powerjob-server:7700 --strict -- java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=10000 -Dcom.sun.management.jmxremote.rmi.port=10000 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -server -XX:+UseG1GC -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=7 -XX:GCLogFileSize=100M -Xloggc:/root/gc.log -jar /powerjob-agent.jar --app powerjob-worker-samples --server powerjob-server:7700"
+    #   see: https://docs.docker.com/desktop/networking/#i-want-to-connect-from-a-container-to-a-service-on-the-host
+    extra_hosts:
+      - host.docker.internal:host-gateway
 
   powerjob-worker-agent2:
     deploy:
@@ -93,10 +64,11 @@ services:
         limits:
           memory: 384M
     container_name: powerjob-worker-agent2
-    image: powerjob/powerjob-worker-agent:test_env
+    image: powerjob-worker-agent-postgres:daily_env
+#    image: powerjob/powerjob-worker-agent:test_env
     restart: always
     depends_on:
-      - powerjob-mysql
+      #      - powerjob-db
       - powerjob-server
     ports:
       - "5003:5005"
@@ -108,4 +80,6 @@ services:
       - "sh"
       - "-c"
       - "./wait-for-it.sh powerjob-server:7700 --strict -- java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=10000 -Dcom.sun.management.jmxremote.rmi.port=10000 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -server -XX:+UseG1GC -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=7 -XX:GCLogFileSize=100M -Xloggc:/root/gc.log -jar /powerjob-agent.jar --app powerjob-worker-samples --server powerjob-server:7700"
-
+    #   see: https://docs.docker.com/desktop/networking/#i-want-to-connect-from-a-container-to-a-service-on-the-host
+    extra_hosts:
+      - host.docker.internal:host-gateway
